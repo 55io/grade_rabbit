@@ -1,0 +1,90 @@
+version: '3'
+services:
+
+  php-main:
+    build: docker/php
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: chown -R :www-data /app
+    command: chmod -R 777 /app
+    command: php-fpm
+    ports:
+      - "9005:9000"
+    networks:
+      - grade-local
+
+  php-first:
+    build: docker/php
+    volumes:
+      - ./app-first:/app
+    working_dir: /app
+    command: chown -R :www-data /app
+    command: chmod -R 777 /app
+    command: php-fpm
+    ports:
+      - "9006:9001"
+    networks:
+      - grade-local
+
+  php-second:
+    build: docker/php
+    volumes:
+      - ./app-second:/app
+    working_dir: /app
+    command: chown -R :www-data /app
+    command: chmod -R 777 /app
+    command: php-fpm
+    ports:
+      - "9007:9002"
+    networks:
+      - grade-local
+
+  nginx:
+    build:
+      context: ./docker/nginx
+    ports:
+      - "9090:80"
+    volumes:
+      - ./app:/app
+    depends_on:
+      - php-main
+    networks:
+      - grade-local
+
+  nginx-first:
+    build:
+      context: ./docker/nginx
+    ports:
+      - "9091:81"
+    volumes:
+      - ./app-first:/app
+    depends_on:
+      - php-first
+    networks:
+      - grade-local
+
+  nginx-second:
+    build:
+      context: ./docker/nginx
+    ports:
+      - "9092:82"
+    volumes:
+      - ./app-second:/app
+    depends_on:
+      - php-second
+    networks:
+      - grade-local
+
+  rabbitmq:
+      build:
+        context: ./docker/rabbit
+      ports:
+        - 5672:5672
+        - 15672:15672
+      networks:
+        - grade-local
+
+networks:
+  grade-local:
+    driver: bridge
